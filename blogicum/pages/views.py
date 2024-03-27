@@ -1,5 +1,6 @@
-from django.shortcuts import render
+"""Views of pages app."""
 from django.http import HttpRequest, HttpResponse
+from django.shortcuts import render
 from django.views.generic import TemplateView
 
 
@@ -21,4 +22,3 @@ def csrf_failure(request, reason=''):
 
 def server_failure(request):
     return render(request, 'pages/500.html', status=500)
-

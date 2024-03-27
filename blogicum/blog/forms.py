@@ -1,16 +1,15 @@
+"""Forms for blog app."""
 from django import forms
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
-from django.core.mail import send_mail
-from django.core.exceptions import ValidationError
 
-from .models import Post, Comment
+from .models import Comment, Post
 
 User = get_user_model()
 
 
 class PostForm(forms.ModelForm):
+    """Post creation form."""
 
     class Meta():
         model = Post
@@ -21,6 +20,11 @@ class PostForm(forms.ModelForm):
 
 
 class CustomUserCreationForm(UserCreationForm):
+    """
+    User creation form.
+
+    Ads fields first_name, last_name and  email.
+    """
 
     class Meta:
         model = User
@@ -28,6 +32,7 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class UserEditForm(forms.ModelForm):
+    """Edit user data form without password."""
 
     class Meta:
         model = User
@@ -35,6 +40,7 @@ class UserEditForm(forms.ModelForm):
 
 
 class CommentForm(forms.ModelForm):
+    """Comment add form."""
 
     class Meta:
         model = Comment

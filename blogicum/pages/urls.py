@@ -1,3 +1,4 @@
+"""URL dispatcher for pages app."""
 from django.urls import path
 
 from . import views

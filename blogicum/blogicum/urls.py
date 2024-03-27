@@ -1,10 +1,10 @@
+"""URL dispatcher for blogicum project."""
+from blog.forms import CustomUserCreationForm
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.views.generic.edit import CreateView
 from django.urls import include, path, reverse_lazy
-
-from blog.forms import CustomUserCreationForm
+from django.views.generic.edit import CreateView
 
 handler404 = 'pages.views.page_not_found'
 handler500 = 'pages.views.server_failure'

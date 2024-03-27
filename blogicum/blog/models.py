@@ -1,17 +1,37 @@
-from django.db import models
+"""Models of blog app."""
 from django.contrib.auth import get_user_model
-
-from core.models import PublishedModel
+from django.db import models
 
 CHARS_LIMIT: int = 30
+
+MAX_LENGTH: int = 256
 
 User = get_user_model()
 
 
+class PublishedModel(models.Model):
+    """Abstract model. Adds is_published and created_at flags."""
+
+    is_published = models.BooleanField(
+        verbose_name='Опубликовано',
+        default=True,
+        help_text='Снимите галочку, чтобы скрыть публикацию.'
+    )
+    created_at = models.DateTimeField(
+        verbose_name='Добавлено',
+        auto_now_add=True
+    )
+
+    class Meta:
+        abstract = True
+
+
 class Category(PublishedModel):
+    """Model for category data."""
+
     title = models.CharField(
         'Заголовок',
-        max_length=256
+        max_length=MAX_LENGTH
     )
     description = models.TextField(
         verbose_name='Описание'
@@ -35,9 +55,11 @@ class Category(PublishedModel):
 
 
 class Location(PublishedModel):
+    """Model for location data."""
+
     name = models.CharField(
         verbose_name='Название места',
-        max_length=256
+        max_length=MAX_LENGTH
     )
 
     class Meta:
@@ -49,9 +71,11 @@ class Location(PublishedModel):
 
 
 class Post(PublishedModel):
+    """Model for post data."""
+
     title = models.CharField(
         verbose_name='Заголовок',
-        max_length=256
+        max_length=MAX_LENGTH
     )
     text = models.TextField(
         verbose_name='Текст'
@@ -96,14 +120,15 @@ class Post(PublishedModel):
         return self.title[:CHARS_LIMIT]
 
 
-class Comment(models.Model):
+class Comment(PublishedModel):
+    """Model for comments data."""
+
     text = models.TextField('Текст комментария')
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    created_at = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
