@@ -150,4 +150,4 @@ media/
 sent_emails/
 
 # Database dump
-.db.json
+blogicum/db.json
