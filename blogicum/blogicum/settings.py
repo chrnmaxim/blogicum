@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-9i(+5wgp4l9)yi0-3j&(l-=u*d$)hz$r!b&ey3-x(l7%n&jpfw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+'localhost',
+'127.0.0.1',
+'www.jpeg.pythonanywhere.com',
+'jpeg.pythonanywhere.com',
+]
 
 CSRF_FAILURE_VIEW = 'pages.views.csrf_failure'
 
