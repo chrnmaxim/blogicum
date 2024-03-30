@@ -3,6 +3,8 @@
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+from difflib import SequenceMatcher
+
 TIME_DELTA: int = 10
 
 
@@ -24,7 +26,10 @@ def is_profanity(text: str) -> None:
     from .models import Profanity
     profanity_list = list(Profanity.objects.values_list('word', flat=True))
     words = text.replace(',', ' ').lower().split()
-    if any(word in words for word in profanity_list):
-        raise ValidationError(
-            'Пожалуйста, не используйте обсценную лексику.'
-        )
+    for word in words:
+        for profanity in profanity_list:
+            compare = SequenceMatcher(None, word, profanity).ratio()
+            if compare > 0.6:
+                raise ValidationError(
+                    'Пожалуйста, не используйте обсценную лексику.'
+                )
