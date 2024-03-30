@@ -14,11 +14,14 @@ from .forms import CommentForm, PostForm, UserEditForm
 from .models import Category, Comment, Post
 
 PAGINATOR_ITEMS: int = 10
+POST_ORDERING: str = '-pub_date'
 
 User = get_user_model()
 
 
 class PostListMixin(ListView):
+    """Mixin Class for posts list."""
+
     model = Post
     template_name = 'blog/index.html'
     paginate_by = PAGINATOR_ITEMS
@@ -29,7 +32,7 @@ class PostListMixin(ListView):
     ).select_related(
         'category', 'location', 'author'
     ).annotate(comment_count=Count('comments'))
-    ordering = '-pub_date'
+    ordering = POST_ORDERING
 
 
 class PostListView(ListView):
@@ -38,14 +41,16 @@ class PostListView(ListView):
     model = Post
     template_name = 'blog/index.html'
     paginate_by = PAGINATOR_ITEMS
-    queryset = Post.objects.filter(
-        pub_date__lte=timezone.now(),
-        is_published=True,
-        category__is_published=True
-    ).select_related(
-        'category', 'location', 'author'
-    ).annotate(comment_count=Count('comments'))
-    ordering = '-pub_date'
+    ordering = POST_ORDERING
+
+    def get_queryset(self):
+        return Post.objects.filter(
+            pub_date__lte=timezone.now(),
+            is_published=True,
+            category__is_published=True
+        ).select_related(
+            'category', 'location', 'author'
+        ).annotate(comment_count=Count('comments')).order_by(POST_ORDERING)
 
 
 class Profile(ListView):
@@ -59,7 +64,7 @@ class Profile(ListView):
             'category', 'location', 'author'
         ).filter(
             author__username=self.kwargs['profile']
-        ).annotate(comment_count=Count('comments')).order_by('-pub_date')
+        ).annotate(comment_count=Count('comments')).order_by(POST_ORDERING)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -98,7 +103,7 @@ class CategoryListView(ListView):
             category__slug=self.kwargs['category_slug'],
             pub_date__lte=timezone.now(),
             is_published=True, category__is_published=True
-        ).annotate(comment_count=Count('comments')).order_by('-pub_date')
+        ).annotate(comment_count=Count('comments')).order_by(POST_ORDERING)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -118,16 +123,13 @@ class PostDetailView(DetailView):
     template_name = 'blog/detail.html'
 
     def dispatch(self, request, *args, **kwargs):
-        # При получении объекта не указываем автора.
-        # Результат сохраняем в переменную.
         instance = get_object_or_404(Post, pk=kwargs['post_id'])
-        # Сверяем автора объекта и пользователя из запроса.
         if (
             (not instance.is_published or not instance.category.is_published
              or instance.pub_date > timezone.now())
             and instance.author != request.user
         ):
-            raise Http404
+            raise Http404('Страница не найдена')
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -163,15 +165,18 @@ class PostUpdateDeleteMixin(LoginRequiredMixin):
     slug_url_kwarg = 'post_id'
     template_name = 'blog/create.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        """Dispatch method depends on child class."""
+        instance = get_object_or_404(Post, pk=kwargs['post_id'])
+        if instance.author != request.user:
+            if type(self).__name__ == 'PostUpdateView':
+                return redirect('blog:post_detail', kwargs['post_id'])
+            raise PermissionDenied('Ошибка доступа')
+        return super().dispatch(request, *args, **kwargs)
+
 
 class PostUpdateView(PostUpdateDeleteMixin, UpdateView):
     """Update view for post update."""
-
-    def dispatch(self, request, *args, **kwargs):
-        instance = get_object_or_404(Post, pk=kwargs['post_id'])
-        if instance.author != request.user:
-            return redirect('blog:post_detail', kwargs['post_id'])
-        return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse(
@@ -181,12 +186,6 @@ class PostUpdateView(PostUpdateDeleteMixin, UpdateView):
 
 class PostDeleteView(PostUpdateDeleteMixin, DeleteView):
     """Delete view for post deletion."""
-
-    def dispatch(self, request, *args, **kwargs):
-        instance = get_object_or_404(Post, pk=kwargs['post_id'])
-        if instance.author != request.user:
-            raise PermissionDenied
-        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -230,12 +229,9 @@ class CommentUpdateDeleteMixin(LoginRequiredMixin):
     template_name = 'blog/comment.html'
 
     def dispatch(self, request, *args, **kwargs):
-        # При получении объекта не указываем автора.
-        # Результат сохраняем в переменную.
         instance = get_object_or_404(Comment, pk=kwargs['comment_id'])
-        # Сверяем автора объекта и пользователя из запроса.
         if instance.author != request.user:
-            raise PermissionDenied
+            raise PermissionDenied('Ошибка доступа')
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):

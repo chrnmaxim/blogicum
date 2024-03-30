@@ -1,6 +1,9 @@
 """Models of blog app."""
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils import timezone
+
+from .validators import post_pub_date
 
 CHARS_LIMIT: int = 30
 
@@ -23,6 +26,8 @@ class PublishedModel(models.Model):
     )
 
     class Meta:
+        """Inner Meta class of Abstract model."""
+
         abstract = True
 
 
@@ -47,10 +52,13 @@ class Category(PublishedModel):
     )
 
     class Meta:
+        """Inner Meta class of Category model."""
+
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
 
     def __str__(self) -> str:
+        """Display category title in admin panel."""
         return self.title[:CHARS_LIMIT]
 
 
@@ -63,10 +71,13 @@ class Location(PublishedModel):
     )
 
     class Meta:
+        """Inner Meta class of Location model."""
+
         verbose_name = 'местоположение'
         verbose_name_plural = 'Местоположения'
 
     def __str__(self) -> str:
+        """Display location name in admin panel."""
         return self.name[:CHARS_LIMIT]
 
 
@@ -85,7 +96,9 @@ class Post(PublishedModel):
         help_text=(
             'Если установить дату и время в будущем — '
             'можно делать отложенные публикации.'
-        )
+        ),
+        default=timezone.now,
+        validators=(post_pub_date,)
     )
     author = models.ForeignKey(
         User,
@@ -112,11 +125,14 @@ class Post(PublishedModel):
     )
 
     class Meta:
+        """Inner Meta class of Location model."""
+
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
         ordering = ('-pub_date',)
 
     def __str__(self) -> str:
+        """Display Post title in admin panel."""
         return self.title[:CHARS_LIMIT]
 
 
@@ -126,10 +142,19 @@ class Comment(PublishedModel):
     text = models.TextField('Текст комментария')
     post = models.ForeignKey(
         Post,
+        verbose_name='Публикация',
         on_delete=models.CASCADE,
         related_name='comments'
     )
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
+        """Inner Meta class of Comment model."""
+
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
         ordering = ('created_at',)
+
+    def __str__(self) -> str:
+        """Display Comment text in admin panel."""
+        return self.text[:CHARS_LIMIT]
