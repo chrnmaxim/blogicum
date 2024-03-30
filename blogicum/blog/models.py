@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 
-from .validators import post_pub_date
+from .validators import is_profanity, post_pub_date
 
 CHARS_LIMIT: int = 30
 
@@ -86,10 +86,12 @@ class Post(PublishedModel):
 
     title = models.CharField(
         verbose_name='Заголовок',
-        max_length=MAX_LENGTH
+        max_length=MAX_LENGTH,
+        validators=(is_profanity,)
     )
     text = models.TextField(
-        verbose_name='Текст'
+        verbose_name='Текст',
+        validators=(is_profanity,)
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата и время публикации',
@@ -139,7 +141,10 @@ class Post(PublishedModel):
 class Comment(PublishedModel):
     """Model for comments data."""
 
-    text = models.TextField('Текст комментария')
+    text = models.TextField(
+        'Текст комментария',
+        validators=(is_profanity,)
+    )
     post = models.ForeignKey(
         Post,
         verbose_name='Публикация',
@@ -158,3 +163,20 @@ class Comment(PublishedModel):
     def __str__(self) -> str:
         """Display Comment text in admin panel."""
         return self.text[:CHARS_LIMIT]
+
+
+class Profanity(models.Model):
+    """Model for add profanity."""
+
+    word = models.TextField('Слово')
+
+    class Meta:
+        """Inner Meta class of Comment model."""
+
+        verbose_name = 'слово'
+        verbose_name_plural = 'Запрещенные слова'
+        ordering = ('word',)
+
+    def __str__(self) -> str:
+        """Display Profanity word in admin panel."""
+        return self.word[:CHARS_LIMIT]

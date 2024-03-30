@@ -17,3 +17,14 @@ def post_pub_date(pub_date: timezone) -> None:
             f'Дата публикации {formatted_pub_date} не может быть раньше, '
             f'чем {formatted_local_time}.'
         )
+
+
+def is_profanity(text: str) -> None:
+    """Validate profanity in Post text."""
+    from .models import Profanity
+    profanity_list = list(Profanity.objects.values_list('word', flat=True))
+    words = text.replace(',', ' ').lower().split()
+    if any(word in words for word in profanity_list):
+        raise ValidationError(
+            'Пожалуйста, не используйте обсценную лексику.'
+        )
