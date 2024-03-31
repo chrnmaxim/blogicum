@@ -5,15 +5,13 @@ from django.utils import timezone
 
 from difflib import SequenceMatcher
 
-TIME_DELTA: int = 10
+PROFANITY_RATIO: float = 0.6
 
 
 def post_pub_date(pub_date: timezone) -> None:
     """Validate post pub_date."""
     formatted_pub_date = pub_date.strftime("%Y-%m-%d")
-    formatted_local_time = (
-        timezone.localtime() - timezone.timedelta(minutes=10)
-    ).strftime("%Y-%m-%d")
+    formatted_local_time = timezone.localtime().strftime("%Y-%m-%d")
     if formatted_pub_date < formatted_local_time:
         raise ValidationError(
             f'Дата публикации {formatted_pub_date} не может быть раньше, '
@@ -29,7 +27,7 @@ def is_profanity(text: str) -> None:
     for word in words:
         for profanity in profanity_list:
             compare = SequenceMatcher(None, word, profanity).ratio()
-            if compare > 0.6:
+            if compare > PROFANITY_RATIO:
                 raise ValidationError(
                     'Пожалуйста, не используйте обсценную лексику.'
                 )
